@@ -4,21 +4,11 @@ const mongoose = require("mongoose");
 app.use(express.json());
 const cors = require("cors");
 app.use(cors());
-const fs = require("fs"); // Add filesystem module
-const path = require("path"); // Add path module
-
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, "files");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-app.use("/files", express.static(uploadDir));
-
+app.use("/files", express.static("files"));
 require('dotenv').config();
 const PORT = process.env.PORT || 5000;
-
-// MongoDB connection validation
+//mongodb connection----------------------------------------------
+// Add validation for DB_URL here ⬇️
 if (!process.env.DB_URL) {
   console.error("FATAL ERROR: DB_URL is not defined in .env file.");
   process.exit(1);
@@ -26,23 +16,19 @@ if (!process.env.DB_URL) {
 
 const mongoUrl = process.env.DB_URL;
 
-mongoose.connect(mongoUrl, { 
-  useNewUrlParser: true,
-  useUnifiedTopology: true // Add recommended option
-})
+mongoose.connect(mongoUrl, { useNewUrlParser: true })
   .then(() => console.log("Connected to database"))
   .catch(e => console.log(e));
-
-// Multer configuration
+//multer------------------------------------------------------------
 const multer = require("multer");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir); // Use validated directory
+    cb(null, "./files");
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now();
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // Keep file extension
+    cb(null, uniqueSuffix + file.originalname);
   },
 });
 
@@ -50,36 +36,34 @@ require("./pdfDetails");
 const PdfSchema = mongoose.model("PdfDetails");
 const upload = multer({ storage: storage });
 
-// File upload endpoint
 app.post("/upload-files", upload.single("file"), async (req, res) => {
+  console.log(req.file);
+  const title = req.body.title;
+  const fileName = req.file.filename;
   try {
-    const title = req.body.title;
-    const fileName = req.file.filename;
-    await PdfSchema.create({ title, pdf: fileName });
+    await PdfSchema.create({ title: title, pdf: fileName });
     res.send({ status: "ok" });
   } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({ status: "error", message: error.message });
+    res.json({ status: error });
   }
 });
 
-// Get files endpoint
 app.get("/get-files", async (req, res) => {
   try {
-    const data = await PdfSchema.find({});
-    res.send({ status: "ok", data });
-  } catch (error) {
-    console.error("Fetch error:", error);
-    res.status(500).json({ status: "error", message: error.message });
-  }
+    PdfSchema.find({}).then((data) => {
+      res.send({ status: "ok", data: data });
+    });
+  } catch (error) {}
 });
 
-// Root endpoint
-app.get("/", (req, res) => {
-  res.send("Server is running successfully!");
+//apis----------------------------------------------------------------
+app.get("/", async (req, res) => {
+  res.send("Success!!!!!!");
 });
 
-// Fix: Remove duplicate app.listen calls
+app.listen(5000, () => {
+  console.log("Server Started");
+});
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
 });
