@@ -5,18 +5,19 @@ app.use(express.json());
 const cors = require("cors");
 app.use(cors());
 app.use("/files", express.static("files"));
+require('dotenv').config();
 //mongodb connection----------------------------------------------
-const mongoUrl =
-  "mongodb+srv://mohammadanamul0000:KM9zPxApIkPPQKwV@cluster0.qqheozr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// Add validation for DB_URL here ⬇️
+if (!process.env.DB_URL) {
+  console.error("FATAL ERROR: DB_URL is not defined in .env file.");
+  process.exit(1);
+}
 
-mongoose
-  .connect(mongoUrl, {
-    useNewUrlParser: true,
-  })
-  .then(() => {
-    console.log("Connected to database");
-  })
-  .catch((e) => console.log(e));
+const mongoUrl = process.env.DB_URL;
+
+mongoose.connect(mongoUrl, { useNewUrlParser: true })
+  .then(() => console.log("Connected to database"))
+  .catch(e => console.log(e));
 //multer------------------------------------------------------------
 const multer = require("multer");
 
