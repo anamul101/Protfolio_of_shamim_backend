@@ -9,12 +9,12 @@ require('dotenv').config();
 const PORT = process.env.PORT || 5000;
 //mongodb connection----------------------------------------------
 // Add validation for DB_URL here ⬇️
-if (!process.env.DB_URL) {
-  console.error("FATAL ERROR: DB_URL is not defined in .env file.");
-  process.exit(1);
-}
+// if (!process.env.DB_URL) {
+//   console.error("FATAL ERROR: DB_URL is not defined in .env file.");
+//   process.exit(1);
+// }
 
-const mongoUrl = process.env.DB_URL;
+const mongoUrl = "mongodb+srv://mohammadanamul0000:<db_password>@cluster0.qqheozr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(mongoUrl, { useNewUrlParser: true })
   .then(() => console.log("Connected to database"))
